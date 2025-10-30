@@ -1,0 +1,627 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>YUSCODE GAMES — Color Catcher Adventure</title>
+<style>
+  :root{
+    --bg1: #9be7ff;
+    --bg2: #ffd6a5;
+    --card: #ffffff;
+    --ui-dark: #072228;
+    --muted: #3b4752;
+    --accent: #ff6b6b;
+    --radius:16px;
+    --shadow: 0 10px 30px rgba(2,6,23,0.12);
+    --game-width: 980px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,"Helvetica Neue",Arial;}
+  body{
+    display:flex;align-items:center;justify-content:center;
+    background: linear-gradient(180deg,var(--bg1),var(--bg2));
+    padding:20px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{
+    width:100%;
+    max-width:var(--game-width);
+    background: linear-gradient(180deg, #fff 0%, #f7f9fb 100%);
+    border-radius:20px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+
+  /* HEADER */
+  header{display:flex;align-items:center;justify-content:space-between;padding:12px 18px;background:linear-gradient(90deg,#fff,#f6fafc);border-bottom:1px solid rgba(0,0,0,0.04)}
+  .brand{display:flex;align-items:center;gap:12px}
+  .logo{
+    width:56px;height:56px;border-radius:12px;background:linear-gradient(135deg,#7b61ff,#4ad9a0);display:flex;align-items:center;justify-content:center;font-weight:800;color:white;font-size:18px;
+  }
+  .brand h1{margin:0;font-size:18px}
+  .controls{display:flex;gap:10px;align-items:center}
+  .btn{background:var(--ui-dark);color:white;padding:8px 12px;border-radius:10px;border:0;font-weight:700;cursor:pointer}
+  .btn.secondary{background:transparent;color:var(--ui-dark);border:1px solid rgba(2,6,23,0.06)}
+  .small{font-size:13px;color:var(--muted)}
+
+  /* INTRO */
+  .intro{
+    display:flex;align-items:center;justify-content:center;flex-direction:column;
+    padding:40px 20px;background:linear-gradient(180deg,#fff,#f0fbff);
+  }
+  .intro .title{font-size:20px;font-weight:800;letter-spacing:1px;color:var(--ui-dark)}
+  .intro .present{font-size:28px;font-weight:900;color:#ff7bb3;margin-top:12px}
+  .intro .start-btn{margin-top:18px;padding:14px 20px;border-radius:12px;background:linear-gradient(90deg,#7b61ff,#4ad9a0);color:white;border:0;font-size:16px;cursor:pointer;box-shadow:0 8px 24px rgba(74,217,160,0.18)}
+  .intro .note{margin-top:10px;color:var(--muted);font-size:13px}
+
+  /* SELECTION */
+  .selection{padding:18px;display:grid;grid-template-columns:1fr;gap:12px}
+  .animals{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
+  .animal{
+    width:120px;height:140px;background:white;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:8px;cursor:pointer;border:1px solid rgba(2,6,23,0.04);
+    transition:transform 220ms ease, box-shadow 220ms;
+  }
+  .animal:active{transform:translateY(3px)}
+  .animal:hover{transform:translateY(-6px);box-shadow:0 12px 30px rgba(2,6,23,0.06)}
+  .animal img{width:72px;height:72px;object-fit:contain}
+  .animal .aname{font-weight:700;color:var(--ui-dark)}
+
+   /* GAME STAGE */
+  .stage{
+    background: linear-gradient(180deg,#aef4b7, #9be7ff);
+    padding:18px;
+    min-height:420px;
+    position:relative;
+    overflow:hidden;
+  }
+  .sky{position:absolute;inset:0;pointer-events:none}
+  .ground{
+    position:absolute;left:0;right:0;bottom:0;height:120px;background:linear-gradient(180deg,#48b88a,#2a9d7a);border-top-left-radius:28px;border-top-right-radius:28px;
+    display:flex;align-items:center;justify-content:center;padding:18px;color:white;font-weight:800;box-shadow:0 -8px 30px rgba(0,0,0,0.06);
+  }
+  .game-ui{position:relative;z-index:3;display:flex;align-items:flex-start;gap:12px;padding-bottom:120px}
+  .left-panel{width:320px;display:flex;flex-direction:column;gap:12px}
+  .animal-card{background:white;border-radius:12px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:8px}
+  .avatar{width:140px;height:140px;border-radius:20px;background:linear-gradient(135deg,#fff,#f6f8ff);display:flex;align-items:center;justify-content:center;position:relative}
+  .shirt{
+    position:absolute;bottom:18px;left:50%;transform:translateX(-50%);width:80px;height:40px;border-radius:8px;box-shadow:0 6px 18px rgba(0,0,0,0.12)
+  }
+  .aname-large{font-size:20px;font-weight:900;color:var(--ui-dark)}
+  .scorebox{display:flex;gap:8px;align-items:center;padding:8px;border-radius:10px;background:rgba(255,255,255,0.9);box-shadow:0 6px 18px rgba(0,0,0,0.06)}
+  .colors-pick{display:flex;gap:8px;flex-wrap:wrap;padding:8px;background:rgba(255,255,255,0.9);border-radius:12px}
+
+  /* bubble area */
+  .play-area{flex:1;position:relative;min-height:320px;display:flex;align-items:flex-start;justify-content:center;padding-top:24px;pointer-events:auto}
+  .bubble{position:absolute;width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:white;font-size:14px;box-shadow:0 8px 18px rgba(0,0,0,0.18);cursor:pointer;user-select:none;touch-action:manipulation}
+  .sparkle{position:absolute;pointer-events:none}
+
+  /* bottom controls */
+  .bottom-controls{display:flex;gap:10px;align-items:center;justify-content:center;padding:12px;background:linear-gradient(90deg,#fff,#f6fbff);border-top:1px solid rgba(0,0,0,0.04)}
+
+  /* responsive */
+  @media(max-width:880px){
+    .left-panel{width:220px}
+    .animal{width:100px;height:120px}
+    .avatar{width:110px;height:110px}
+  }
+  @media(max-width:640px){
+    .game-ui{flex-direction:column;align-items:center}
+    .left-panel{width:100%}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap" role="application" aria-label="YUSCODE GAMES — Color Catcher Adventure">
+  <header>
+    <div class="brand">
+      <div class="logo">Y</div>
+      <div>
+        <h1 style="margin:0">YUSCODE GAMES</h1>
+        <div class="small">Color Catcher Adventure</div>
+      </div>
+    </div>
+    <div class="controls">
+      <button class="btn secondary" id="downloadBtn" title="Download this game file">Download Game</button>
+      <button class="btn" id="musicToggle">Music: Off</button>
+    </div>
+  </header>
+
+  <!-- INTRO: YUSCODE GAMES PRESENTS -->
+  <div id="introScreen" class="intro" aria-hidden="false">
+    <div class="title">Welcome to</div>
+    <div class="present">✨ YUSCODE GAMES PRESENTS ✨</div>
+    <div class="note">A playful learning game for children (2–5 years)</div>
+    <button id="goToSelect" class="start-btn" aria-label="Start">Tap to Start</button>
+    <div style="margin-top:10px;color:var(--muted);font-size:13px">Tap any animal to hear its name, then start playing.</div>
+  </div>
+
+  <!-- SELECTION SCREEN -->
+  <div id="selectScreen" class="selection" style="display:none" aria-hidden="true">
+    <div style="text-align:center;padding:6px"><strong style="font-size:18px">Choose an Animal</strong></div>
+    <div class="animals" id="animalList">
+      <!-- animals inserted by JS -->
+    </div>
+  </div>
+
+  <!-- GAME STAGE -->
+  <div id="gameStage" style="display:none">
+    <div class="stage" id="stage">
+      <div class="sky" aria-hidden="true"></div>
+
+      <div class="game-ui container" style="width:100%;padding:18px;display:flex;gap:18px;box-sizing:border-box;z-index:3">
+        <div class="left-panel">
+          <div class="animal-card" aria-live="polite">
+            <div class="avatar" id="avatar">
+              <!-- animal image -->
+              <img id="avatarImg" src="" alt="" style="width:110px;height:110px;object-fit:contain">
+              <div id="shirt" class="shirt" style="background:red"></div>
+            </div>
+            <div class="aname-large" id="selectedName">—</div>
+            <div class="small" style="color:var(--muted)">Tap the bubble matching the shirt color</div>
+            <div style="display:flex;gap:8px;margin-top:8px;align-items:center">
+              <div class="scorebox" id="scoreBox">Score: <span id="score">0</span></div>
+              <div class="scorebox">Round: <span id="round">1</span></div>
+            </div>
+          </div>
+
+          <div class="colors-pick" style="margin-top:10px" id="colorLegend" aria-hidden="false">
+            <!-- legend of colors -->
+          </div>
+        </div>
+
+        <div class="play-area" id="playArea" aria-live="polite">
+          <!-- bubbles drop here -->
+        </div>
+      </div>
+
+      <div class="ground">
+        <div style="display:flex;gap:16px;align-items:center">
+          <div style="font-weight:900">YUSCODE GAMES</div>
+          <div style="opacity:0.9">• Color Catcher Adventure</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="bottom-controls">
+      <button class="btn" id="restartBtn">Change Animal</button>
+      <button class="btn secondary" id="nextRoundBtn">Next Round</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* -------------------------
+   GAME DATA & ASSETS
+   ------------------------- */
+const ANIMALS = [
+  { id:'bear', name:'Bear', img:'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><circle cx="100" cy="100" r="90" fill="%23f4c27a"/><circle cx="70" cy="70" r="18" fill="%23fff"/><circle cx="130" cy="70" r="18" fill="%23fff"/><rect x="60" y="120" width="80" height="50" rx="18" fill="%23a8653b"/></svg>' },
+  { id:'bunny', name:'Bunny', img:'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><rect x="0" y="0" width="200" height="200" fill="none"/><ellipse cx="100" cy="105" rx="70" ry="60" fill="%23fff6f2"/><rect x="65" y="30" width="22" height="70" rx="12" fill="%23fff6f2"/><rect x="113" y="30" width="22" height="70" rx="12" fill="%23fff6f2"/><circle cx="80" cy="95" r="10" fill="%23ffd6d6"/><circle cx="120" cy="95" r="10" fill="%23ffd6d6"/></svg>' },
+  { id:'cat', name:'Cat', img:'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><circle cx="100" cy="100" r="80" fill="%23ffd6a5"/><polygon points="40,70 60,20 80,70" fill="%23ffd6a5"/><polygon points="160,70 140,20 120,70" fill="%23ffd6a5"/><circle cx="80" cy="100" r="10" fill="%23000"/><circle cx="120" cy="100" r="10" fill="%23000"/></svg>' },
+  { id:'lion', name:'Lion', img:'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><circle cx="100" cy="100" r="70" fill="%23ffd166"/><circle cx="100" cy="100" r="95" fill="none" stroke="%23ff9f1c" stroke-width="18"/><circle cx="85" cy="95" r="8" fill="%23000"/><circle cx="115" cy="95" r="8" fill="%23000"/></svg>' },
+  { id:'panda', name:'Panda', img:'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><circle cx="100" cy="100" r="85" fill="%23fff"/><ellipse cx="70" cy="80" rx="14" ry="20" fill="%23000"/><ellipse cx="130" cy="80" rx="14" ry="20" fill="%23000"/><circle cx="100" cy="115" r="12" fill="%23000"/></svg>' },
+  { id:'elephant', name:'Elephant', img:'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200"><ellipse cx="100" cy="100" rx="80" ry="60" fill="%23c7e7ff"/><rect x="40" y="60" width="40" height="30" rx="8" fill="%23c7e7ff" /><rect x="120" y="60" width="40" height="30" rx="8" fill="%23c7e7ff" /></svg>' }
+];
+
+const COLORS = [
+  {name:'Red', css:'#ff4d4d', id:'red'},
+  {name:'Green', css:'#2ecc71', id:'green'},
+  {name:'Blue', css:'#4da6ff', id:'blue'},
+  {name:'Yellow', css:'#ffd166', id:'yellow'},
+  {name:'Orange', css:'#ff9f43', id:'orange'}
+];
+
+/* -------------------------
+   UI REFERENCES
+   ------------------------- */
+const introScreen = document.getElementById('introScreen');
+const goToSelectBtn = document.getElementById('goToSelect');
+const selectScreen = document.getElementById('selectScreen');
+const animalList = document.getElementById('animalList');
+const gameStage = document.getElementById('gameStage');
+const avatarImg = document.getElementById('avatarImg');
+const selectedName = document.getElementById('selectedName');
+const shirtEl = document.getElementById('shirt');
+const playArea = document.getElementById('playArea');
+const scoreEl = document.getElementById('score');
+const roundEl = document.getElementById('round');
+const downloadBtn = document.getElementById('downloadBtn');
+const musicToggle = document.getElementById('musicToggle');
+const restartBtn = document.getElementById('restartBtn');
+const nextRoundBtn = document.getElementById('nextRoundBtn');
+const colorLegend = document.getElementById('colorLegend');
+
+/* -------------------------
+   AUDIO / TTS / MUSIC
+   ------------------------- */
+let audioContext = null;
+let musicOn = false;
+let musicNode = null;
+
+function ensureAudio(){
+  if(!audioContext){
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+  }
+}
+
+// simple gentle music loop using oscillator (starts only after user action)
+function startMusic(){
+  ensureAudio();
+  if(musicNode) return;
+  const ctx = audioContext;
+  const gain = ctx.createGain();
+  gain.gain.value = 0.06;
+  gain.connect(ctx.destination);
+
+  // create two oscillators with low frequency melody pattern
+  const o1 = ctx.createOscillator();
+  const o2 = ctx.createOscillator();
+  o1.type = 'sine'; o2.type = 'sine';
+  o1.frequency.value = 220; o2.frequency.value = 440;
+  const lfo = ctx.createOscillator(); lfo.frequency.value = 0.2;
+  const lfoGain = ctx.createGain(); lfoGain.gain.value = 20;
+  lfo.connect(lfoGain); lfoGain.connect(o1.frequency);
+
+  o1.connect(gain); o2.connect(gain);
+
+  o1.start(); o2.start(); lfo.start();
+  musicNode = {ctx,o1,o2,lfo,gain};
+}
+function stopMusic(){
+  if(musicNode){
+    try{
+      musicNode.o1.stop(); musicNode.o2.stop(); musicNode.lfo.stop();
+    }catch(e){}
+    musicNode = null;
+  }
+}
+musicToggle.addEventListener('click', ()=>{
+  // start or stop music (must be in response to user gesture)
+  if(!musicOn){
+    ensureAudio();
+    startMusic();
+    musicOn = true;
+    musicToggle.textContent = 'Music: On';
+  } else {
+    stopMusic();
+    musicOn = false;
+    musicToggle.textContent = 'Music: Off';
+  }
+});
+
+/* SPEECH: Friendly voices using Web Speech API */
+function speak(text, opts = {}){
+  // Web Speech API
+  if('speechSynthesis' in window){
+    const utter = new SpeechSynthesisUtterance(text);
+    // child-friendly voice selection heuristic
+    utter.lang = opts.lang || 'en-US';
+    utter.rate = opts.rate || 0.95;
+    utter.pitch = opts.pitch || 1.05;
+    // choose a likely female/child-friendly voice if available
+    const voices = speechSynthesis.getVoices();
+    if(voices && voices.length){
+      // prefer voices with 'child', 'female', or 'Jenny', 'Samantha' heuristics
+      let v = voices.find(v=>/child|kid/i.test(v.name)) || voices.find(v=>/female|Samantha|Joanna|Amy|Aria|Alloy/i.test(v.name)) || voices[0];
+      if(v) utter.voice = v;
+    }
+    window.speechSynthesis.cancel(); // cancel any queued
+    window.speechSynthesis.speak(utter);
+  } else {
+    // fallback: beep using AudioContext simple tone
+    ensureAudio();
+    const ctx = audioContext;
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.frequency.value = 600;
+    g.gain.value = 0.0001;
+    o.connect(g); g.connect(ctx.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.06, ctx.currentTime + 0.05);
+    g.gain.exponentialRampToValueAtTime(0.00001, ctx.currentTime + 0.5);
+    try{o.stop(ctx.currentTime + 0.7)}catch(e){}
+  }
+}
+
+/* -------------------------
+   INITIAL UI: populate selection animals
+   ------------------------- */
+function createAnimalCards(){
+  animalList.innerHTML = '';
+  ANIMALS.forEach(a=>{
+    const node = document.createElement('button');
+    node.className = 'animal';
+    node.setAttribute('data-id', a.id);
+    node.setAttribute('aria-label', a.name);
+    node.innerHTML = `<img src="${a.img}" alt="${a.name}"><div class="aname">${a.name}</div>`;
+    node.addEventListener('click', () => {
+      // say the animal name (tts) and mark it selected visually
+      speak(a.name, {rate:0.9, pitch:1.1});
+      // brief pulse to show selection
+      node.style.transform = 'scale(1.04)';
+      setTimeout(()=>node.style.transform='', 260);
+      // store temporary selection and enable start
+      node.dataset.selected = 'true';
+      // small visual cue - highlight
+      document.querySelectorAll('.animal').forEach(x=>x.style.boxShadow='');
+      node.style.boxShadow = '0 12px 30px rgba(0,0,0,0.08)';
+      selectedTemp = a.id;
+    });
+    animalList.appendChild(node);
+  });
+}
+createAnimalCards();
+
+/* -------------------------
+   NAVIGATION: intro -> selection -> game
+   ------------------------- */
+let selectedTemp = null;
+let currentAnimal = null;
+let score = 0;
+let round = 1;
+let currentShirtColor = null;
+let bubbleInterval = null;
+goToSelectBtn.addEventListener('click', ()=>{
+  introScreen.style.display = 'none';
+  selectScreen.style.display = 'block';
+  selectScreen.setAttribute('aria-hidden','false');
+  // ensure voices available by calling getVoices (some browsers need user gesture)
+  if(window.speechSynthesis && speechSynthesis.getVoices) speechSynthesis.getVoices();
+});
+
+animalList.addEventListener('click', (e)=>{
+  const btn = e.target.closest('.animal');
+  if(!btn) return;
+  const id = btn.getAttribute('data-id');
+  // find animal
+  const a = ANIMALS.find(x=>x.id===id);
+  if(!a) return;
+  // the user can now start game with this animal; proceed to game
+  startGameWithAnimal(a);
+});
+
+/* -------------------------
+   START GAME
+   ------------------------- */
+function startGameWithAnimal(a){
+  selectedTemp = null;
+  currentAnimal = a;
+  selectScreen.style.display = 'none';
+  gameStage.style.display = 'block';
+  score = 0; round = 1;
+  scoreEl.textContent = score;
+  roundEl.textContent = round;
+  avatarImg.src = a.img;
+  avatarImg.alt = a.name;
+  selectedName.textContent = a.name;
+  shirtEl.style.background = COLORS[0].css;
+  // say animal name to confirm selection
+  speak(a.name + '!', {rate:0.95, pitch:1.05});
+  // populate legend
+  populateLegend();
+  // start first round
+  nextRound();
+}
+
+function populateLegend(){
+  colorLegend.innerHTML = '';
+  COLORS.forEach(c=>{
+    const el = document.createElement('div');
+    el.style.display='flex';
+    el.style.alignItems='center';
+    el.style.gap='8px';
+    el.style.padding='6px 8px';
+    el.style.borderRadius='8px';
+    el.style.background='transparent';
+    el.innerHTML = `<div style="width:20px;height:20px;border-radius:6px;background:${c.css};border:1px solid rgba(0,0,0,0.05)"></div><div style="font-weight:700;color:var(--muted);font-size:13px">${c.name}</div>`;
+    colorLegend.appendChild(el);
+  });
+}
+
+/* -------------------------
+   ROUND / BUBBLE LOGIC
+   ------------------------- */
+function chooseRandomColor(){
+  const idx = Math.floor(Math.random()*COLORS.length);
+  return COLORS[idx];
+}
+
+function nextRound(){
+  clearBubbles();
+  round++;
+  roundEl.textContent = round;
+  // pick a random shirt color
+  const c = chooseRandomColor();
+  currentShirtColor = c;
+  shirtEl.style.background = c.css;
+  // announce color (friendly) for child
+  speak('Find the ' + c.name, {rate:0.95, pitch:1.05});
+  // spawn bubbles
+  spawnBubbles();
+}
+
+function clearBubbles(){
+  if(bubbleInterval) { clearInterval(bubbleInterval); bubbleInterval = null; }
+  document.querySelectorAll('.bubble').forEach(b=>b.remove());
+}
+
+/* spawn bubbles periodically with random positions and velocities */
+function spawnBubbles(){
+  const maxBubbles = 6;
+  let created = 0;
+  // initial burst
+  for(let i=0;i<4;i++) createBubble();
+  // then periodic
+  bubbleInterval = setInterval(()=>{
+    if(created < 30) { createBubble(); created++; }
+  }, 1100);
+}
+
+/* create a bubble element and animate it downward */
+function createBubble(){
+  const area = playArea.getBoundingClientRect();
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble';
+  // choose a color at random
+  const col = COLORS[Math.floor(Math.random()*COLORS.length)];
+  bubble.style.background = col.css;
+  bubble.dataset.colorId = col.id;
+  bubble.title = col.name;
+  // set random X position within play area
+  const x = Math.random() * (area.width - 80) + 20;
+  bubble.style.left = x + 'px';
+  bubble.style.top = '-80px';
+  bubble.style.width = '64px'; bubble.style.height='64px';
+  playArea.appendChild(bubble);
+
+  // smooth drop animation
+  const duration = 4500 + Math.random()*3000;
+  const start = performance.now();
+  const startX = x;
+  const sway = (Math.random()*80)-40;
+
+  // text content (optional small icon)
+  bubble.textContent = '';
+
+  // pointer to handle taps
+  bubble.addEventListener('click', onBubbleTap);
+  bubble.addEventListener('touchstart', function(ev){ ev.preventDefault(); onBubbleTap.call(this,ev); }, {passive:false});
+
+  // animate using requestAnimationFrame
+  function frame(t){
+    const p = Math.min(1,(t-start)/duration);
+    const ease = p; // linear is fine for gentle motion
+    const y = ease * (area.height + 120);
+    bubble.style.transform = `translate(${(sway * Math.sin(p * Math.PI)).toFixed(2)}px, ${y}px)`;
+    if(p < 1){
+      requestAnimationFrame(frame);
+    } else {
+      // reached bottom, remove
+      bubble.remove();
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* on bubble tap / click */
+function onBubbleTap(e){
+  const bubble = e.currentTarget || this;
+  const chosenColorId = bubble.dataset.colorId;
+  // correct?
+  if(chosenColorId === currentShirtColor.id){
+    // correct
+    score += 1;
+    scoreEl.textContent = score;
+    // feedback
+    speak('Great!', {rate:1.0, pitch:1.2});
+    giveReward(bubble);
+    // remove bubble
+    bubble.remove();
+    // small celebration, then next round after short delay
+    setTimeout(()=> nextRound(), 900);
+  } else {
+    // wrong
+    speak('Pshs, not correct!', {rate:1.0, pitch:0.9});
+    // wiggle avatar
+    avatarImg.animate([{transform:'translateX(0px)'},{transform:'translateX(-8px)'},{transform:'translateX(6px)'},{transform:'translateX(0px)'}],{duration:450,iterations:1});
+    // visual shake of bubble
+    bubble.animate([{transform:'translateY(0)'},{transform:'translateY(-10px)'},{transform:'translateY(0)'}],{duration:330,iterations:1});
+    // small penalty: no score change; keep playing
+  }
+}
+
+/* reward effect: sparkle & heart */
+function giveReward(targetBubble){
+  // sparkle
+  const s = document.createElement('div');
+  s.className = 'sparkle';
+  s.innerHTML = '&#10024;'; // sparkle star
+  s.style.left = (parseFloat(targetBubble.style.left) + 8) + 'px';
+  s.style.top = (targetBubble.getBoundingClientRect().top - playArea.getBoundingClientRect().top + 8) + 'px';
+  s.style.fontSize = '28px';
+  s.style.opacity = '0';
+  s.style.transition = 'transform 600ms ease, opacity 600ms ease';
+  playArea.appendChild(s);
+  requestAnimationFrame(()=>{
+    s.style.transform = 'translateY(-40px) scale(1.6)';
+    s.style.opacity = '1';
+  });
+  setTimeout(()=>{ s.style.opacity='0'; setTimeout(()=>s.remove(),400); }, 700);
+}
+
+/* -------------------------
+   CONTROLS: Restart / Next Round / Change Animal
+   ------------------------- */
+restartBtn.addEventListener('click', ()=>{
+  // go back to selection
+  gameStage.style.display = 'none';
+  selectScreen.style.display = 'block';
+  selectScreen.setAttribute('aria-hidden','false');
+  clearBubbles();
+  stopMusic();
+  musicOn = false;
+  musicToggle.textContent = 'Music: Off';
+});
+
+nextRoundBtn.addEventListener('click', ()=>{
+  nextRound();
+});
+
+/* -------------------------
+   DOWNLOAD: create blob and download current document
+   ------------------------- */
+downloadBtn.addEventListener('click', ()=>{
+  // create current HTML text (static) and download as file
+  const docHtml = `<!doctype html>\n` + document.documentElement.outerHTML;
+  const blob = new Blob([docHtml], {type:'text/html;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'yuscode-color-catcher.html';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+/* -------------------------
+   INITIALIZE: wire start button
+   ------------------------- */
+document.getElementById('goToSelect').addEventListener('click', ()=>{
+  // intro -> select
+  introScreen.style.display = 'none';
+  selectScreen.style.display = 'block';
+  // ensure speech voices are loaded (some browsers require user gesture)
+  if(window.speechSynthesis && speechSynthesis.getVoices) speechSynthesis.getVoices();
+});
+
+// For visual clarity, also allow touch on the intro present title to skip
+introScreen.querySelector('.present').addEventListener('click', ()=>{
+  introScreen.style.display='none';
+  selectScreen.style.display='block';
+});
+
+/* Accessibility: keyboard quick start */
+document.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' && introScreen.style.display !== 'none'){
+    introScreen.style.display='none';
+    selectScreen.style.display='block';
+  }
+});
+
+/* Ensure initial state */
+selectScreen.style.display = 'none';
+gameStage.style.display = 'none';
+
+/* Small note for mobile: tapping will enable TTS and audio context on first gesture */
+document.body.addEventListener('touchstart', function f(){ 
+  // unlock audio context & speech voices on first touch
+  try{ if(!audioContext) audioContext = new (window.AudioContext || window.webkitAudioContext)(); } catch(e){}
+  if(window.speechSynthesis && speechSynthesis.getVoices) speechSynthesis.getVoices();
+  document.body.removeEventListener('touchstart', f);
+}, {passive:true});
+
+</script>
+</body>
+</html>
